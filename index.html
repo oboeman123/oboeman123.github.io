@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html><head><meta name="GCD" content="YTk3ODQ3ZWZhN2I4NzZmMzBkNTEwYjJl0df4c180c0116623328870768d2ae31e"/>
+<title>Generic Browser Interface For FI9821W IP Cameras V2.0</title>
+<meta content="text/html; charset=utf-8" http-equiv="content-type">
+<style type="text/css">body {
+    margin: 0px;
+    font-size: 100%;
+}</style>
+<script type="text/javascript" src="http://code.jquery.com/jquery-latest.js"></script>
+<script type="text/javascript" language="javascript">
+var e=navigator.userAgent.toLowerCase();
+var isOpera=e.indexOf("opera")!=-1;
+var isChrome=e.indexOf("chrome")!=-1;
+var isIE=document.all&&e.indexOf("msie")!=-1&&!isIE;
+if (isIE) document.execCommand("ClearAuthenticationCache");
+//***********************************************************************************
+//                                                                                  *
+//             Generic Browser Interface for Foscam FI9821W Camera V2.0             *
+//      Copyright By TheUberOverLord AKA Don Kennedy TheUberOverLord@yahoo.com      *
+//                                  All Rights Reserved                             *
+//                 Saves Bandwidth and Includes Zoom On Image Click                 *
+//                   Reset Zoom to Normal By Double Click On Image                  *
+//                                                                                  *
+// More here: http://foscam.us/forum/free-generic-browser-interface-for-foscam-fi9821w-cameras-t4341.html
+//                                                                                  *
+// You MUST enter the local IP address and port or your ISP IP address and port     *
+// or your DDNS and port ("If you have properly setup the camera for remote access")*
+// Example: var IPandPort = "192.168.1.111:91";  ("Local IP Address and Port")      *
+// Example: var IPandPort = "78.102.134.11:91";  ("ISP IP Address and Port")        *
+// Example: var IPandPort = "mycam.ddns.org:91"; ("DDNS IP Address and Port")       *
+//                                                                                  *
+var IPandPort = "66.249.228.118:8090"; // <- ***** Change This *****                *
+//                                                                                  *
+// You MUST enter a valid user and password here there will not be any              *
+// prompt to login. Note: Please Don't use a Admin login, if this will be public    *
+// otherwise people will be able to change the camera configuration.                *
+// Both of the values below are case sensitive.                                     *
+//                                                                                  *
+// Example: var user = "operator"; ("Operator Id for camera")                       *
+// Example: var user = "vistor"; ("Visitor Id for camera")                          *
+//                                                                                  *
+// NOTE: A Visitor Level User Id will NOT be able to use PTZ Controls even if they  *
+//       display. So. If you want to allow PTZ Controls please use a Operator level *
+//       User Id.                                                                   *
+//                                                                                  *
+var user = "guest"; // <- ***** Change This *****                                    *
+//                                                                                  *
+// Example: var pwd  = "oper"; ("Operator password for camera")                     *
+// Example: var pwd = "visit"; ("Visitor password for camera")                      *
+//                                                                                  *
+var pwd  = "christmas"; // <- ***** Change This *****                                *
+//                                                                                  *
+// This allows you to change the width of the camera video resolution displayed.    *
+// A value of "" will use the default width. The aspect for height will sync.       *
+// This value is an internal value for this Interface and does not actually change  *
+// or modify your camera video or image settings.                                   *
+//                                                                                  *
+var camResolution = "720P";  // <- ***** Change This? *****                          *
+//                                                                                  *
+// If your camera is mounted upside down. Set this to "Y" otherwise leave it as ""; *
+//                                                                                  *
+var camFlipped = "";       // <- ***** Change This? *****                           *
+//                                                                                  *
+// Note: The below does NOT really change your camera FPS. It is an internal rate   *
+//       Specific to this interface ONLY! The purpose is to minimize bandwidth while*
+//       monitoring your cameras, without actually changing the actual FPS used     *
+//       for the camera for alarm emails, FTP and recordings.                       *
+//                                                                                  *
+//       Because this interface supports infinite zooms by clicking the image as    *
+//       many times as you wish, double clicking the image to reset the image to    *
+//       Normal resolution. You maybe able to use a smaller resolution than before  *
+//       if you choose to, to help minimize exceeding any ISP bandwidth limits as   *
+//       well as control the overhead on your local network.                        *
+//                                                                                  *
+// Example: var MyFPS = 33 ms is 30 FPS 114KBps at 160*120, 228KBps at 320*240 and  *
+//          456KBps with 640*480 Resolution.                                        *
+//                                                                                  *
+// Example: var MyFPS = 67 ms is 15 FPS 57KBps at 160*120, 114KBps at 320*240 and   *
+//          228KBps with 640*480 Resolution.                                        *
+//                                                                                  *
+// Example: var MyFPS = 100 ms is 10 FPS 38KBps at 160*120, 76KBps at 320*240 and   *
+//          152KBps with 640*480 Resolution.                                        *
+//                                                                                  *
+// Example: var MyFPS = 200 ms is 5 FPS 19KBps at 160*120, 38KBps at 320*240 and    *
+//          76KBps with 640*480 Resolution.                                         *
+//                                                                                  *
+// Example: var MyFPS = 1000 ms is 1 FPS 4KBps at 160*120, 8KBps at 320*240 and     *
+//          16KBps with 640*480 Resolution.                                         *
+//                                                                                  *
+// Example: var MyFPS = 5000 ms is 1 Frame every 5 seconds 4KBp5s at 160*120,       *
+//          8KBp5s at 320*240 and 16KBp5s with 640*480 Resolution.                  *
+//                                                                                  *
+var MyFPS = 33; // <- ***** Change This? ***** ("This is 1 FPS") In MilliSeconds.   *
+//                                                                                  *
+//  Note: If the camera can't reach the FPS the maximum will be shown in the stats. *
+//        To see the highest set this to 33 or change the FPS to see your maximum.  *
+//                                                                                  *
+// Zoom percentage. Generally a 50 percent increase is best, but you can change the *
+// Zoom percentage here to be anything you want from 1 to 100. Each click on the    *
+// image itself will increase Zoom by this percentage, a double click on the image  *
+// itself, will reset the image to no Zoom.                                         *
+//                                                                                  *
+var MyZoom = 50; // <- ***** Change This? ***** to be +- more tha 50 percent Zoom.  *
+//                                                                                  *
+//  This handles the FPS and Bytes Per second Statistics Gathering and Display.     *
+//                                                                                  *
+//  Note: If DisplayStatsEvery = ""; No Statatistics for FPS and Bytes per second   *
+//        will be gathered/displayed. Bytes Per Second statistics can only be shown *
+//        when using a IE ("Internet Explorer") 32 or 64 bit browser.               *
+//                                                                                  *
+var DisplayStatsEvery = "5"; // < *** Change This? *** In Seconds every 5 Seconds.  *
+//                                                                                  *
+//  This will display the PTZ controls.                                             *
+//                                                                                  *
+var ShoWPTZControls = "Y"; // < *** Change This? *** ""; = No, "Y"; = yes.          *
+//                                                                                  *
+//  This will display the Go To Preset controls. You will need to add Presets       *
+//  named 1 - 6 in your camera for these to work properly.                          *
+//                                                                                  *
+var ShowGoToPresets = ""; // < *** Change This? *** ""; = No, "Y"; = yes.          *
+//                                                                                  *
+//  This will display the Cruise controls.                                          *
+//                                                                                  *
+var ShowCruise = ""; // < *** Change This? *** ""; = No, "Y"; = yes.               *
+//                                                                                  *
+//  This will display the ability to change FPS.                                    *
+//                                                                                  *
+var ShoWFPS = ""; // < *** Change This? *** ""; = No, "Y"; = yes.                  *
+//                                                                                  *
+// This will display buttons for Zoom and UnZoom for mobile devices to make it      *
+// easier to not Zoom the entire page but simply the image by clicking the buttons. *
+// Values are "A" = Only show Zoom Buttons for devices with Touch screens.          *
+// "" = Never show Zoom Buttons.                                                    *
+//                                                                                  *
+var DisplayZoomButtons = "A"; // Only for devices with Touch Screens.               *
+//                                                                                  *
+// If you have enabled the timeout below and you wish to go to a jump page after    *
+// timeout happens, you can enter a valid web page below.                           *
+//                                                                                  *
+// Example: Say you had 2 cameras, and would automatically like to see both of them *
+// once every 5 minutes, without doing anything. You could have two copies of this  *
+// interface, setup for auto logon, set the timeout in both to 5 minutes and use    *
+// the other copy jump page to point back to this one. Now, your browser window will*
+// cycle from one camera to the next, without human intervention. Every 5 Minutes.  *
+//                                                                                  *
+// Say, you have a public camera, and after so long you want the viewer viewing the *
+// the camera to go to one of your web pages, you can do that as well.              *
+//                                                                                  *
+var JumpPage  = ""; // *** Change This? *** Example "http://MyWebSite.com"          *
+//                                                                                  *
+// NOTE: You Must have assigned a valid JumpPage above, when setting the timeout    *
+//       value below!                                                               *
+//                                                                                  *
+// This will timeout a session. Example, maybe you have a public camera and don't   *
+// want people to be viewing the camera forever. The time is in Milli Seconds.      *
+// so for example. a 5 minutes max, would be a value of 300000. There are 60000     *
+// Milli Seconds per minute, so 300000/60000 = 5. If the value is left empty, there *
+// will be no forced timeout.                                                       *
+//                                                                                  *
+var JumpPageTimeout  = ""; // <- *** Change This? ***                               *
+//                                                                                  *
+//***********************************************************************************
+// Please don't change anything below, report any problems using the email above    *
+// **********************************************************************************
+//
+var img = new Image();
+var imgObj;
+var originalWidth = 0;
+var orignalHeight = 0;
+var countFPS = 0;
+var totalKBps = 0;
+var firstTime = true;
+var unique_name = (new Date()).getTime();
+var ptzMoveTopLeft = "ptzMoveTopLeft";
+var ptzMoveBottomLeft = "ptzMoveBottomLeft";
+var ptzMoveLeft = "ptzMoveLeft";
+var ptzMoveUp = "ptzMoveUp";
+var ptzMoveDown = "ptzMoveDown";
+var ptzMoveRight = "ptzMoveRight";
+var ptzMoveBottomRight = "ptzMoveBottomRight";
+var ptzMoveTopRight = "ptzMoveTopRight";
+var isTouchDevice = ((typeof Touch !== "undefined") || 
+(e.match(/(iphone|ipod|ipad)/) ||
+e.match(/(android)/)  || 
+e.match(/(iemobile)/) || 
+e.match(/iphone/i) || 
+e.match(/ipad/i) || 
+e.match(/ipod/i) || 
+e.match(/blackberry/i) || 
+e.match(/bada/i))) ? true: false;
+function flipped()
+{
+    ptzMoveTopLeft = "ptzMoveBottomRight";
+    ptzMoveBottomLeft = "ptzMoveTopRight";
+    ptzMoveLeft = "ptzMoveRight";
+    ptzMoveUp = "ptzMoveDown";
+    ptzMoveDown = "ptzMoveUp";
+    ptzMoveRight = "ptzMoveLeft";
+    ptzMoveBottomRight = "ptzMoveTopLeft";
+    ptzMoveTopRight = "ptzMoveBottomLeft";
+}
+function redirect() 
+{   
+    window.location = JumpPage;  
+}
+function preload()
+{
+    img.src= "http://"+IPandPort+"/"+"cgi-bin"+"/"+"CGIProxy.fcgi?cmd=snapPicture2&usr="+user+"&pwd="+pwd+"&cnt="+(unique_name++);
+}
+function changesrc()
+{
+    img1.src=img.src;
+    preload();
+    setTimeout(changesrc,MyFPS);
+}
+function update()
+{
+    imgObj = document.getElementById('img1');
+    if (!isChrome) imgObj.src = img.src;
+    img.src = "http://"+IPandPort+"/"+"cgi-bin"+"/"+"CGIProxy.fcgi?cmd=snapPicture2&usr="+user+"&pwd="+pwd+"&cnt="+(unique_name++);
+    if (originalWidth == 0)
+    {
+        originalWidth = img1.clientWidth;
+        originalHeight = img1.clientHeight;
+    }
+    if (firstTime)
+    {
+        document.getElementById('testing123').style.display = 'block';
+        document.getElementById('testing123').style.visibility = 'visible';
+        firstTime = false;
+    }
+    if (DisplayStatsEvery != "")
+    {
+        if (isIE)
+            totalKBps = totalKBps + parseFloat(document.getElementById("img1").fileSize);
+        countFPS++;
+    }
+}
+function load_video()
+{
+    window.status=" ";
+    setTimeout("update()", MyFPS);
+}
+function takeError1()
+{
+    img1.src = "http://"+IPandPort+"/"+"cgi-bin"+"/"+"CGIProxy.fcgi?cmd=snapPicture2&usr="+user+"&pwd="+pwd+"&cnt="+(unique_name++);
+}
+function takeError()
+{
+    img.src = "http://"+IPandPort+"/"+"cgi-bin"+"/"+"CGIProxy.fcgi?cmd=snapPicture2&usr="+user+"&pwd="+pwd+"&cnt="+(unique_name++);
+}
+function startonload()
+{
+    if (isChrome)
+    {
+        img1.src = "http://"+IPandPort+"/"+"cgi-bin"+"/"+"CGIProxy.fcgi?cmd=snapPicture2&usr="+user+"&pwd="+pwd+"&cnt="+(unique_name++);
+        imgObj = document.getElementById('img1');
+        img = imgObj;
+        img.onerror = takeError;
+        img.onload = load_video;
+    }
+    else
+    {
+        img.onerror = takeError;
+        img1.onerror = takeError1;
+        img.onload = load_video;
+        img.src = "http://"+IPandPort+"/"+"cgi-bin"+"/"+"CGIProxy.fcgi?cmd=snapPicture2&usr="+user+"&pwd="+pwd+"&cnt="+(unique_name++);
+    }
+}
+function load()
+{
+    if (camResolution != "") img1.style.width = camResolution+'px';
+    if (camFlipped == "Y") flipped();
+    if (ShoWPTZControls == "Y")        
+    {
+        document.getElementById('PTZ1').style.display = 'block';
+        document.getElementById('PTZ1').style.visibility = 'visible';
+        document.getElementById('PTZ2').style.display = 'block';
+        document.getElementById('PTZ2').style.visibility = 'visible';
+    }
+    if (ShowGoToPresets == "Y")
+    {
+        document.getElementById('GoToPresets').style.display = 'block';
+        document.getElementById('GoToPresets').style.visibility = 'visible';
+    }
+    if (ShowCruise == "Y")
+    {
+        document.getElementById('Cruise').style.display = 'block';
+        document.getElementById('Cruise').style.visibility = 'visible';
+    }
+    if (ShoWFPS == "Y")
+    {
+        $('#IntFPS').val(MyFPS);
+        if (document.getElementById('IntFPS').selectedIndex == -1)
+        {
+            document.getElementById('IntFPS').options[0].value = MyFPS;
+            $('#IntFPS').val(MyFPS);
+        }
+        else
+            document.getElementById('IntFPS').options[0].value = MyFPS;
+        document.getElementById('InternalFPS').style.display = 'block';
+        document.getElementById('InternalFPS').style.visibility = 'visible';
+    }
+    if ((DisplayZoomButtons == "A" && isTouchDevice) && MyZoom > 0)
+    {
+         document.getElementById('ZoomButtons').style.display = 'block';
+         document.getElementById('ZoomButtons').style.visibility = 'visible';
+    }
+    if (navigator.appName.indexOf("Microsoft IE Mobile") != -1)
+    {
+	preload();
+	changesrc();
+	return;
+    }
+    startonload();
+    if (DisplayStatsEvery != "")
+    {
+        countFPS = 0;
+        totalKBps = 0;
+        setInterval("reload_count()", (DisplayStatsEvery * 1000));
+    }
+    if ((JumpPage != "") && (JumpPageTimeout != ""))
+         redirectTimerId = window.setTimeout('redirect()', JumpPageTimeout);
+}
+function reload_count()
+{    
+    var reCalc = 0;
+    if (MyFPS > (DisplayStatsEvery * 1000) && (MyFPS > 1000))
+        reCalc = Math.round(MyFPS/1000);
+    else
+        reCalc = DisplayStatsEvery;
+    if ((isIE) && (countFPS > 0) && (totalKBps > 0))
+    {
+         if ((typeof devid !== "undefined") && (DisplayCameraName != ""))
+              $("#CameraName").text(devid + " - FPS: " + (countFPS / reCalc).toFixed(2) + " - Bps: " + Math.round((totalKBps/reCalc)).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","));
+         else
+              $("#CameraName").text("FPS: " + (countFPS / reCalc).toFixed(2) + " - Bps: " + Math.round((totalKBps/reCalc)).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","));
+    }
+    else if (countFPS > 0)
+             if ((typeof devid !== "undefined") && (DisplayCameraName != ""))
+                  $("#CameraName").text(devid + " - FPS: " + (countFPS / reCalc).toFixed(2));
+             else
+                  $("#CameraName").text("FPS: " + (countFPS / reCalc).toFixed(2));
+    if (countFPS > 0)
+    {
+        countFPS = 0;
+        totalKBps = 0;
+    }                
+}
+function decoder_control_2(command)
+{ 
+    action_zone.location='http://'+IPandPort+'/'+'cgi-bin'+'/'+'CGIProxy.fcgi?cmd='+command+'&usr='+user+'&pwd='+pwd;
+}
+</script>
+</head>
+<body onload="load()">
+<script type="text/javascript"> 
+        jQuery(document).ready( 
+            function(){ 
+                $('#Container img').click( 
+                    function( event ){ 
+                        var scale = (MyZoom+100)/100; 
+                        var pos = $(this).offset(); 
+                        var clickX = event.pageX - pos.left; 
+                        var clickY = event.pageY - pos.top;
+                        var container = $(this).parent().get(0);  
+                        $(this).css({ 
+                                        width: this.width*scale,  
+                                        height: this.height*scale 
+                                    });  
+                        container.scrollLeft = ($(container).width() / -2 ) + clickX * scale; 
+                        container.scrollTop = ($(container).height() / -2 ) + clickY * scale; 
+                    } 
+                );
+                $('#Container img').dblclick( 
+                    function( event ){
+                        $(this).css({ 
+                                        width: originalWidth,  
+                                        height: originalHeight 
+                                    }); 
+                    } 
+                );
+            } 
+        ); 
+</script>
+<div id="testing123" style="display:none; visibility:hidden">
+        <div id="CameraName" align="center">
+        </div>
+        <div id="PTZ1" align="center" style="display:none;visibility:hidden">
+             <center>
+            <button type="button" ontouchstart="decoder_control_2(ptzMoveTopLeft)" ontouchend="decoder_control_2('ptzStopRun')" onmousedown="decoder_control_2(ptzMoveTopLeft)" onmouseup="decoder_control_2('ptzStopRun')">↑←</button>&nbsp;
+            <button type="button" ontouchstart="decoder_control_2(ptzMoveBottomLeft)" ontouchend="decoder_control_2('ptzStopRun')" onmousedown="decoder_control_2(ptzMoveBottomLeft)" onmouseup="decoder_control_2('ptzStopRun')">↓←</button>&nbsp;
+            <button type="button" ontouchstart="decoder_control_2(ptzMoveLeft)" ontouchend="decoder_control_2('ptzStopRun')" onmousedown="decoder_control_2(ptzMoveLeft)" onmouseup="decoder_control_2('ptzStopRun')">←</button>&nbsp;
+            <button type="button" ontouchstart="decoder_control_2(ptzMoveUp)" ontouchend="decoder_control_2('ptzStopRun')" onmousedown="decoder_control_2(ptzMoveUp)" onmouseup="decoder_control_2('ptzStopRun')">↑</button>&nbsp;
+            <button type="button" ontouchstart="decoder_control_2(ptzMoveDown)" ontouchend="decoder_control_2('ptzStopRun')" onmousedown="decoder_control_2(ptzMoveDown)" onmouseup="decoder_control_2('ptzStopRun')">↓</button>&nbsp;
+            <button type="button" ontouchstart="decoder_control_2(ptzMoveRight)" ontouchend="decoder_control_2('ptzStopRun')" onmousedown="decoder_control_2(ptzMoveRight)" onmouseup="decoder_control_2('ptzStopRun')">→</button>&nbsp;
+            <button type="button" ontouchstart="decoder_control_2(ptzMoveBottomRight)" ontouchend="decoder_control_2('ptzStopRun')" onmousedown="decoder_control_2(ptzMoveBottomRight)" onmouseup="decoder_control_2('ptzStopRun')">→↓</button>&nbsp;
+            <button type="button" ontouchstart="decoder_control_2(ptzMoveTopRight)" ontouchend="decoder_control_2('ptzStopRun')" onmousedown="decoder_control_2(ptzMoveTopRight)" onmouseup="decoder_control_2('ptzStopRun')">→↑</button> 
+            </center>
+        </div>
+        <div id="ZoomButtons" align="center" style="display:none; visibility:hidden">
+            <br>
+            <button type="button" ontouchstart="$('#img1').click()">Zoom</button>&nbsp;
+            <button type="button" ontouchstart="$('#img1').dblclick()">UnZoom</button>
+            <br><br>
+        </div>
+        <div id="Container" align="center">
+             <img id="img1" src="" alt="">
+        </div>
+        <div id="PTZ2" align="center" style="display:none;visibility:hidden">
+             <center>
+            <button type="button" ontouchstart="decoder_control_2(ptzMoveTopLeft)" ontouchend="decoder_control_2('ptzStopRun')" onmousedown="decoder_control_2(ptzMoveTopLeft)" onmouseup="decoder_control_2('ptzStopRun')">↑←</button>&nbsp;
+            <button type="button" ontouchstart="decoder_control_2(ptzMoveBottomLeft)" ontouchend="decoder_control_2('ptzStopRun')" onmousedown="decoder_control_2(ptzMoveBottomLeft)" onmouseup="decoder_control_2('ptzStopRun')">↓←</button>&nbsp;
+            <button type="button" ontouchstart="decoder_control_2(ptzMoveLeft)" ontouchend="decoder_control_2('ptzStopRun')" onmousedown="decoder_control_2(ptzMoveLeft)" onmouseup="decoder_control_2('ptzStopRun')">←</button>&nbsp;
+            <button type="button" ontouchstart="decoder_control_2(ptzMoveUp)" ontouchend="decoder_control_2('ptzStopRun')" onmousedown="decoder_control_2(ptzMoveUp)" onmouseup="decoder_control_2('ptzStopRun')">↑</button>&nbsp;
+            <button type="button" ontouchstart="decoder_control_2(ptzMoveDown)" ontouchend="decoder_control_2('ptzStopRun')" onmousedown="decoder_control_2(ptzMoveDown)" onmouseup="decoder_control_2('ptzStopRun')">↓</button>&nbsp;
+            <button type="button" ontouchstart="decoder_control_2(ptzMoveRight)" ontouchend="decoder_control_2('ptzStopRun')" onmousedown="decoder_control_2(ptzMoveRight)" onmouseup="decoder_control_2('ptzStopRun')">→</button>&nbsp;
+            <button type="button" ontouchstart="decoder_control_2(ptzMoveBottomRight)" ontouchend="decoder_control_2('ptzStopRun')" onmousedown="decoder_control_2(ptzMoveBottomRight)" onmouseup="decoder_control_2('ptzStopRun')">→↓</button>&nbsp;
+            <button type="button" ontouchstart="decoder_control_2(ptzMoveTopRight)" ontouchend="decoder_control_2('ptzStopRun')" onmousedown="decoder_control_2(ptzMoveTopRight)" onmouseup="decoder_control_2('ptzStopRun')">→↑</button> 
+            </center>
+        </div>
+        <div id="GoToPresets" align="center" style="display:none;visibility:hidden">
+            <br>        
+            GoTo Preset:&nbsp;
+            <button type="button" ontouchstart="decoder_control_2('ptzGotoPresetPoint&amp;name=1')" onmousedown="decoder_control_2('ptzGotoPresetPoint&amp;name=1')">1</button>&nbsp;
+            <button type="button" ontouchstart="decoder_control_2('ptzGotoPresetPoint&amp;name=2')" onmousedown="decoder_control_2('ptzGotoPresetPoint&amp;name=2')">2</button>&nbsp;
+            <button type="button" ontouchstart="decoder_control_2('ptzGotoPresetPoint&amp;name=3')" onmousedown="decoder_control_2('ptzGotoPresetPoint&amp;name=3')">3</button>&nbsp;
+            <button type="button" ontouchstart="decoder_control_2('ptzGotoPresetPoint&amp;name=4')" onmousedown="decoder_control_2('ptzGotoPresetPoint&amp;name=4')">4</button>&nbsp;
+            <button type="button" ontouchstart="decoder_control_2('ptzGotoPresetPoint&amp;name=5')" onmousedown="decoder_control_2('ptzGotoPresetPoint&amp;name=5')">5</button>&nbsp;
+            <button type="button" ontouchstart="decoder_control_2('ptzGotoPresetPoint&amp;name=6')" onmousedown="decoder_control_2('ptzGotoPresetPoint&amp;name=6')">6</button>
+        </div>
+        <div id="Cruise" align="center" style="display:none;visibility:hidden">
+            <br>        
+            Cruise:&nbsp;
+            <button type="button" ontouchstart="decoder_control_2('ptzStartCruise&amp;mapName=Vertical')" onmousedown="decoder_control_2('ptzStartCruise&amp;mapName=Vertical')">Start Vertical Cruise</button>&nbsp;
+            <button type="button" ontouchstart="decoder_control_2('ptzStartCruise&amp;mapName=Horizontal')" onmousedown="decoder_control_2('ptzStartCruise&amp;mapName=Horizontal')">Start Horizontal Cruise</button>&nbsp;
+            <button type="button" ontouchstart="decoder_control_2('ptzStopCruise')" onmousedown="decoder_control_2('ptzStopCruise')">Stop Cruise</button>
+        </div>
+        <div id="InternalFPS" align="center" style="display:none;visibility:hidden">
+             <br>
+             <select id="IntFPS" onchange="MyFPS = (this.value);">
+                     <option value="200">Default</option>
+                     <option value="33">30 FPS</option>
+                     <option value="50">20 FPS</option>
+                     <option value="66">15 FPS</option>
+                     <option value="100">10 FPS</option>
+                     <option value="200">5 FPS</option>
+                     <option value="250">4 FPS</option>
+                     <option value="333">3 FPS</option>
+                     <option value="500">2 FPS</option>
+                     <option value="1000">1 FPS</option>
+                     <option value="2000">.5 FPS</option>
+                     <option value="5000">.2 FPS</option>
+                     <option value="10000">.1 FPS</option>
+             </select>
+            : Change Internal FPS
+        </div>
+</div> 
+<iframe name="action_zone" style="DISPLAY: none" width="0" height="0">
+</iframe>
+
+</body></html>
